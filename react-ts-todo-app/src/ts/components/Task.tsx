@@ -1,18 +1,23 @@
-// Import des Task-Typen aus der Todos.tsx
-import { TTask } from "./Todos";
+// Import des Task-Typen aus der todos.types.ts
+import { useState } from "react";
+import { TTask } from "./todos.types";
 
 
 // Typ für die Props, die in einen Task wandern
 type TaskProps = {
     task: TTask,
-    checkTaskHandler: (id: number, isCompleted: boolean) => void
+    checkTaskHandler: (id: number, isCompleted: boolean) => void,
+    deleteTaskHandler: (id: number) => void,
+    editTaskHandler: (id: number, newText: string) => void
 };
 
 /* 
     Komponente zur Darstellung eines Tasks.
     Erhält neben den Task-Informationen noch einen Handler zum An- und Abhaken eines Tasks.
 */
-function Task({task, checkTaskHandler}: TaskProps) {
+function Task({task, checkTaskHandler, deleteTaskHandler, editTaskHandler}: TaskProps) {
+    const [isEditing, setIsEditing] = useState(false);
+
     /* 
         Changehandler für die Checkbox des Tasks.
         Ruft den übergebenen Handler zum An- und Abhaken auf
@@ -23,8 +28,30 @@ function Task({task, checkTaskHandler}: TaskProps) {
         checkTaskHandler(task.id, !task.isCompleted);
     };
 
+    const handleDeleteClick = () => {
+        // Übergebe Task ID an DeleteHandler aus den Props
+        deleteTaskHandler(task.id);
+    };
+
+    const handleEditClick = () => {
+        // editTaskHandler(task.id, 'Beispieltext');
+
+        setIsEditing(!isEditing);
+    };
+
+    const handleTaskTextChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+        // Hole den Text Wert aus dem change-Event
+        const newText = evt.target.value;
+
+        // Übergebe extrahierten Text Wert an den übergebenen Handler zum Editieren
+        editTaskHandler(task.id, newText);
+    };
+
     return (
-        <li>
+        <li style={{
+            display: 'flex',
+            gap: '0.2em'
+        }}>
             <label className={task.isCompleted ? 'line-through' : ''}>
                 <input 
                     type="checkbox" 
@@ -32,8 +59,30 @@ function Task({task, checkTaskHandler}: TaskProps) {
                     checked={task.isCompleted}
                     onChange={handleCheckChange}
                 />
-                {task.taskText}
+                {
+                    isEditing  
+                    ? <input type="text" value={task.taskText} onChange={handleTaskTextChange} />
+                    : task.taskText
+            }
             </label>
+
+            <button
+                onClick={handleEditClick}
+                style={{
+                    border: '1px solid black',
+                    borderRadius: '5px',
+                    padding: '0 8px'
+                }}
+            >Edit</button>
+
+            <button
+                onClick={handleDeleteClick}
+                style={{
+                    border: '1px solid black',
+                    borderRadius: '5px',
+                    padding: '0 8px'
+                }}
+            >x</button>
         </li>
     );
 }

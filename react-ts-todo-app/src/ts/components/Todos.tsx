@@ -1,14 +1,8 @@
+import { TTask } from "./todos.types";
 import TodoList from "./TodoList";
 import TodoForm from "./TodoForm";
 import { useEffect, useState } from "react";
 
-// Typ Definition für einen Task
-// Exportiert für externen Gebrauch in anderen Komponenten
-export type TTask = {
-    id: number,
-    taskText: string,
-    isCompleted: boolean
-};
 
 /* 
     Hilfsfunktion zum Generieren einer neuen einzigartigen Zahlen ID.
@@ -73,7 +67,7 @@ function Todos() {
     */
     useEffect(() => {
         // Hole JSON-Repräsentation der im LocalStorage gespeicherten Tasks
-        const storedTasksJson = localStorage.getItem(TASK_STORE_KEY);        
+        const storedTasksJson = localStorage.getItem(TASK_STORE_KEY);
 
         // Wenn gespeicherte Tasks vorhanden, speichere sie geparst im State, sonst Beispiel Tasks
         // TODO: Evtl. möchte man die Beispieltasks nicht mehr. Dann müssen die hier raus ;)
@@ -84,10 +78,18 @@ function Todos() {
         Side-Effect, der bei Änderungen der Tasks im State
         diese als JSON im LocalStorage speichert
     */
-    useEffect(() => {
-        // Wenn Liste nicht leer, speichere Tasks als JSON im LocalStorage
-        if (tasks.length > 0) localStorage.setItem(TASK_STORE_KEY, JSON.stringify(tasks));
-    }, [tasks]);
+    // useEffect(() => {
+    //     console.log('running...');
+
+    //     // Speichere Tasks als JSON im LocalStorage
+    //     if (tasks.length > 0) localStorage.setItem(TASK_STORE_KEY, JSON.stringify(tasks));
+    // }, [tasks]);
+
+
+    const saveTasksToLocalStorage = (tasks: TTask[]) => {
+        // Speichere Tasks als JSON im LocalStorage
+        localStorage.setItem(TASK_STORE_KEY, JSON.stringify(tasks));
+    };
 
     /* 
         Handler zum Erstellen und Hinzufügen eines neuen Tasks
@@ -95,18 +97,47 @@ function Todos() {
     */
     const addTask = (newTaskText: string) => {
         // Speichere neue Taskliste mittels Kopie der alten plus dem neuen Eintrag
-        setTasks([
-            ...tasks,
-            {
-                id: genNewId(tasks),
-                taskText: newTaskText,
-                isCompleted: false
-            }
-        ]);
+        const newTask = {
+            id: genNewId(tasks),
+            taskText: newTaskText,
+            isCompleted: false
+        };
+
+
+        // setTasks([
+        //     ...tasks,
+        //     newTask
+        // ]);
+
+        // Speichere Tasks persistent im LocalStorage
+        // saveTasksToLocalStorage();
+
+        /* 
+            ACHTUNG! Der Zugriff auf Tasks nach Anstoß des Stateupdates
+            garantiert NICHT, dass die Tasks da schon geupdatet sind.
+            Operationen mit Abhängigkeit auf den geupdateten State,
+            könnten daher besser im Callback eines Stateupdates durchgeführt werden.
+        */
 
         // Speichere neue Taskliste mittels Kopie der alten plus dem neuen Eintrag
         // unter Verwendung einer Update Funktion als Callback (Immer sinnvoll, wenn alter Wert nötig ist)
-        // setTasks(prev => [...prev, newTask]);
+        setTasks(prev => {
+            const updatedTasks = [...prev, newTask];
+
+            // Speichere Tasks persistent im LocalStorage
+            saveTasksToLocalStorage(updatedTasks);
+
+            return updatedTasks;
+        });
+
+
+        // const newTaskList = [
+        //     ...tasks,
+        //     newTask
+        // ];
+
+        // setTasks(newTaskList);
+        // saveTasksToLocalStorage(newTaskList);
     };
 
     /* 
@@ -115,27 +146,78 @@ function Todos() {
     */
     const checkTask = (id: number, isCompleted: boolean) => {
         // Verwende Setter für Tasks-State mit Callback
-        setTasks(prevTasks => {
-            // Finde anhand der übergebenen ID den Zieltask, der verändert werden soll
-            const targetIdx = prevTasks.findIndex(task => task.id === id);
+        // setTasks(prevTasks => {
+        //     // Finde anhand der übergebenen ID den Zieltask, der verändert werden soll
+        //     const targetIdx = prevTasks.findIndex(task => task.id === id);
 
-            // Toggle den isCompleted Wert des Zieltasks
-            prevTasks[targetIdx].isCompleted = isCompleted;
+        //     // Toggle den isCompleted Wert des Zieltasks
+        //     prevTasks[targetIdx].isCompleted = isCompleted;
 
-            // Gebe neue Kopie des veränderten Tasksarray zurück
-            return [...prevTasks];
-        });
+        //     const tasksCopy = [...prevTasks];
+
+        //     // Speichere Tasks persistent im LocalStorage
+        //     saveTasksToLocalStorage(tasksCopy);
+
+        //     // Gebe neue Kopie des veränderten Tasksarray zurück
+        //     return tasksCopy;
+        // });
+
+        // Erstelle Kopie der bisherigen Tasks
+        const tasksCopy = [...tasks];
+
+        // Finde anhand der übergebenen ID den Zieltask, der verändert werden soll
+        const targetIdx = tasksCopy.findIndex(task => task.id === id);
+
+        // Toggle den isCompleted Wert des Zieltasks
+        tasksCopy[targetIdx].isCompleted = isCompleted;
+
+        // Speichere Tasks persistent im LocalStorage
+        saveTasksToLocalStorage(tasksCopy);
+
+        setTasks(tasksCopy);
     };
 
     /* 
-        TODO: Ein Handler zum Löschen eines Tasks per ID
+        Ein Handler zum Löschen eines Tasks per ID
     */
-    const deleteTask = (id: number) => {};
+    const deleteTask = (id: number) => {
+        console.log(`Delete Task with ID ${id}`);
+
+        // Erstelle Kopie der Tasks im State
+        const tasksCopy = [...tasks];
+
+        // Finde anhand der übergebenen ID den Zieltask, der verändert werden soll
+        const targetIdx = tasksCopy.findIndex(task => task.id === id);
+
+        // Entferne den Zieltask
+        tasksCopy.splice(targetIdx, 1);
+
+        // Speichere veränderte Kopie der Tasks im LocalStorage
+        saveTasksToLocalStorage(tasksCopy);
+
+        // Führe Stateupdate mit veränderter Kopie der Tasks durch
+        setTasks(tasksCopy);
+    };
 
     /* 
-        TODO: Ein Handler zum Editieren des Textes eines Tasks anhand der ID
+        Ein Handler zum Editieren des Textes eines Tasks anhand der ID
     */
-    const editTaskText = (id: number, newTaskText: string) => {};
+    const editTaskText = (id: number, newTaskText: string) => {
+        // Erstelle Kopie der Tasks im State
+        const tasksCopy = [...tasks];
+
+        // Finde anhand der übergebenen ID den Zieltask, der verändert werden soll
+        const targetIdx = tasksCopy.findIndex(task => task.id === id);
+
+        // Überschreibe TaskText des Zieltasks
+        tasksCopy[targetIdx].taskText = newTaskText;
+
+        // Speichere veränderte Kopie der Tasks im LocalStorage
+        saveTasksToLocalStorage(tasksCopy);
+
+        // Führe Stateupdate mit veränderter Kopie der Tasks durch
+        setTasks(tasksCopy);
+    };
 
     return (
         /* 
@@ -148,7 +230,20 @@ function Todos() {
 
             <hr />
 
-            <TodoList tasks={tasks} checkTaskHandler={checkTask} />
+            <TodoList
+                tasks={tasks}
+                checkTaskHandler={checkTask}
+                deleteTaskHandler={deleteTask}
+                editTaskHandler={editTaskText}
+            />
+
+            <button
+                onClick={() => setTasks(() => {
+                    saveTasksToLocalStorage([]);
+
+                    return [];
+                })}
+            >Clear Tasks</button>
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { TTask } from "./Todos";
+import { TTask } from "./todos.types";
 import Task from "./Task";
 
 /* 
@@ -8,14 +8,16 @@ import Task from "./Task";
 */
 type TodoListProps = {
     tasks: TTask[],
-    checkTaskHandler: (id: number, isCompleted: boolean) => void
+    checkTaskHandler: (id: number, isCompleted: boolean) => void,
+    deleteTaskHandler: (id: number) => void,
+    editTaskHandler: (id: number, newText: string) => void
 };
 
 /* 
     Komponente zum Anzeigen einer ganzen Liste von Tasks.
     Könnte um Sortierfunktion, etc. erweitert werden.
 */
-function TodoList({ tasks, checkTaskHandler }: TodoListProps) {
+function TodoList({ tasks, checkTaskHandler, deleteTaskHandler, editTaskHandler }: TodoListProps) {
     /* 
         Erstelle ein Array von Task Elementen für jeden Task des übergebenen Arrays
     */
@@ -23,6 +25,8 @@ function TodoList({ tasks, checkTaskHandler }: TodoListProps) {
         return <Task
             task={task}
             checkTaskHandler={checkTaskHandler}
+            deleteTaskHandler={deleteTaskHandler}
+            editTaskHandler={editTaskHandler}
             key={task.id}
         />;
     });
