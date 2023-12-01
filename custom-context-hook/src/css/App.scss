@@ -1,0 +1,61 @@
+.light {
+    background-color: white;
+    color: black;
+}
+
+.dark {
+    background-color: rgb(66, 65, 65);
+    color: white;
+
+    input {
+        background-color: rgb(66, 65, 65);
+    }
+
+    select {
+        background-color: rgb(66, 65, 65);
+    }
+}
+
+.user-form {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5em;
+    border: 1px solid black;
+    border-radius: 0.2em;
+    padding: 1em;
+
+
+
+    input[type="text"] {
+        border: 1px solid black;
+        border-radius: 0.2em;
+    }
+
+    select {
+        border: 1px solid black;
+        border-radius: 0.2em;
+        padding: 0.2em 0.5em;
+    }
+
+    button {
+        border: 1px solid black;
+        border-radius: 0.2em;
+        padding: 0.2em;
+
+        &:hover {
+            background-color: lightgray;
+        }
+
+        &:active {
+            background-color: darkgrey;
+        }
+
+        &:disabled {
+            background-color: grey;
+            opacity: 0.8;
+        }
+    }
+}
